@@ -19,7 +19,7 @@ def donload_book_txt(book_id, file_name, folder):
         book_id
     ))
     file_extension = '.txt'
-    book_path = os.path.join(folder, '{}{}'.format(sanitized_filename, file_extension))
+    book_path = Path(folder, '{}{}'.format(sanitized_filename, file_extension))
     with open(book_path, 'w') as file:
         file.write(response.text)
     return book_path
@@ -42,6 +42,12 @@ def get_book_info(book_id):
     book_author = book_name_text[1].strip()
     book_jaket_tag = soup.find(class_='bookimage').find('img')['src']
     book_jaket_url = urljoin(BASE_URL, book_jaket_tag)
+    comments = soup.find('div', id='content').find_all('span', class_='black')
+    print(book_name)
+    for comment in comments:
+        print(comment.text)
+    print()
+    print()
     return book_name, book_author, book_jaket_url
 
 
@@ -52,7 +58,7 @@ def download_book_jacket(url, folder):
     check_for_redirect(response)
     file_name = os.path.basename(urlsplit(url).path)
     sanitized_filename = sanitize_filename(file_name)
-    book_jacket_path = os.path.join(folder, sanitized_filename)
+    book_jacket_path = Path(folder, sanitized_filename)
     with open(book_jacket_path, 'wb') as out_file:
         out_file.write(response.content)
 
@@ -65,8 +71,8 @@ if __name__ == '__main__':
     for book_id in range(start_book_id, end_book_id+1):
         try:
             book_name, book_author, book_jacket_url = get_book_info(book_id)
-            donload_book_txt(book_id, book_name, folder)
-            download_book_jacket(book_jacket_url, img_folder)
+            # donload_book_txt(book_id, book_name, folder)
+            # download_book_jacket(book_jacket_url, img_folder)
         except (requests.ConnectionError) as e:
             print('Ошибка подключения: {} '.format(e))
         except (requests.HTTPError) as e:
