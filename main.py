@@ -42,11 +42,12 @@ def get_book_info(book_id):
     book_author = book_name_text[1].strip()
     book_jaket_tag = soup.find(class_='bookimage').find('img')['src']
     book_jaket_url = urljoin(BASE_URL, book_jaket_tag)
-    comments = soup.find('div', id='content').find_all('span', class_='black')
+    # comments = soup.find('div', id='content').find_all('span', class_='black')
+    # for comment in comments:
+    #     print(comment.text)
+    book_genre = soup.find('span', class_='d_book').find('a')['title']
     print(book_name)
-    for comment in comments:
-        print(comment.text)
-    print()
+    print(book_genre.split('-')[0])
     print()
     return book_name, book_author, book_jaket_url
 
