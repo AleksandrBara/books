@@ -66,8 +66,8 @@ def download_book_jacket(url, folder):
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('start_id', type=int, default=1)
-    parser.add_argument('end_id', type=int, default=10)
+    parser.add_argument('--start_id', type=int, default=1)
+    parser.add_argument('--end_id', type=int, default=10)
     return parser.parse_args()
 
 
