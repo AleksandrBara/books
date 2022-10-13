@@ -3,9 +3,11 @@ import os
 from pathlib import Path
 from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
-from urllib.parse import urljoin, urlparse, urlsplit
+from urllib.parse import urljoin, urlsplit
+import argparse
 
-BASE_URL ='https://tululu.org'
+
+BASE_URL = 'https://tululu.org'
 
 
 def donload_book_txt(book_id, file_name, folder):
@@ -22,7 +24,6 @@ def donload_book_txt(book_id, file_name, folder):
     book_path = Path(folder, '{}{}'.format(sanitized_filename, file_extension))
     with open(book_path, 'w') as file:
         file.write(response.text)
-    return book_path
 
 
 def check_for_redirect(response):
@@ -30,11 +31,7 @@ def check_for_redirect(response):
         raise requests.HTTPError
 
 
-def get_book_info(book_id):
-    url = '{}/b{}/'.format(BASE_URL, book_id)
-    response = requests.get(url)
-    response.raise_for_status()
-    check_for_redirect(response)
+def parse_book_page(response):
     soup = BeautifulSoup(response.text, 'lxml')
     book_name_tag = soup.find('body').find('h1')
     book_name_text = book_name_tag.text.split('::')
@@ -42,14 +39,17 @@ def get_book_info(book_id):
     book_author = book_name_text[1].strip()
     book_jaket_tag = soup.find(class_='bookimage').find('img')['src']
     book_jaket_url = urljoin(BASE_URL, book_jaket_tag)
-    # comments = soup.find('div', id='content').find_all('span', class_='black')
-    # for comment in comments:
-    #     print(comment.text)
-    book_genre = soup.find('span', class_='d_book').find('a')['title']
-    print(book_name)
-    print(book_genre.split('-')[0])
-    print()
-    return book_name, book_author, book_jaket_url
+    comments_tag = soup.find('div', id='content').find_all('span', class_='black')
+    comments = [comment.text for comment in comments_tag]
+    book_genre_tag = soup.find('span', class_='d_book').find('a')['title']
+    book_genre = book_genre_tag.split('-')[0]
+    return {
+        'book_name': book_name,
+        'author': book_author,
+        'book_jacket': book_jaket_url,
+        'comments': comments,
+        'genre': book_genre
+    }
 
 
 def download_book_jacket(url, folder):
@@ -60,28 +60,34 @@ def download_book_jacket(url, folder):
     file_name = os.path.basename(urlsplit(url).path)
     sanitized_filename = sanitize_filename(file_name)
     book_jacket_path = Path(folder, sanitized_filename)
-    with open(book_jacket_path, 'wb') as out_file:
-        out_file.write(response.content)
+    with open(book_jacket_path, 'wb') as file:
+        file.write(response.content)
+
+
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('start_id', type=int, default=1)
+    parser.add_argument('end_id', type=int, default=10)
+    return parser.parse_args()
 
 
 if __name__ == '__main__':
-    start_book_id = 1
-    end_book_id = 10
-    folder = 'books'
+    args = get_args()
+    book_start_id = args.start_id
+    book_end_id = args.end_id
+    txt_folder = 'books'
     img_folder = 'images'
-    for book_id in range(start_book_id, end_book_id+1):
+    for book_id in range(book_start_id, book_end_id + 1):
+        book_url = '{}/b{}/'.format(BASE_URL, book_id)
         try:
-            book_name, book_author, book_jacket_url = get_book_info(book_id)
-            # donload_book_txt(book_id, book_name, folder)
-            # download_book_jacket(book_jacket_url, img_folder)
+            book_response = requests.get(book_url)
+            book_response.raise_for_status()
+            check_for_redirect(book_response)
+            book_info = parse_book_page(book_response)
+            donload_book_txt(book_id, book_info['book_name'], txt_folder)
+            download_book_jacket(book_info['book_jacket'], img_folder)
         except (requests.ConnectionError) as e:
             print('Ошибка подключения: {} '.format(e))
         except (requests.HTTPError) as e:
             print('Книга с id = {}, не найдена '.format(book_id))
             continue
-
-
-
-
-
-
