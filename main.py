@@ -5,15 +5,15 @@ from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
 from urllib.parse import urljoin, urlsplit
 import argparse
+from time import sleep
 
 
 BASE_URL = 'https://tululu.org'
 
 
 def donload_book_txt(book_id, file_name, folder):
-    library_url = '{}/txt.php?id={}'.format(BASE_URL, book_id)
     os.makedirs(folder, exist_ok=True)
-    response = requests.get(library_url)
+    response = requests.get(BASE_URL, params={'id': book_id})
     response.raise_for_status()
     check_for_redirect(response)
     sanitized_filename = sanitize_filename('{}_{}'.format(
@@ -34,11 +34,9 @@ def check_for_redirect(response):
 def parse_book_page(response):
     soup = BeautifulSoup(response.text, 'lxml')
     book_name_tag = soup.find('body').find('h1')
-    book_name_text = book_name_tag.text.split('::')
-    book_name = book_name_text[0].strip()
-    book_author = book_name_text[1].strip()
+    book_name, book_author = book_name_tag.text.split('::')
     book_jaket_tag = soup.find(class_='bookimage').find('img')['src']
-    book_jaket_url = urljoin(BASE_URL, book_jaket_tag)
+    book_jaket_url = urljoin(response.url, book_jaket_tag)
     comments_tag = soup.find('div', id='content').find_all('span', class_='black')
     comments = [comment.text for comment in comments_tag]
     book_genre_tag = soup.find('span', class_='d_book').find('a')['title']
@@ -83,11 +81,12 @@ if __name__ == '__main__':
             book_response = requests.get(book_url)
             book_response.raise_for_status()
             check_for_redirect(book_response)
-            book_info = parse_book_page(book_response)
-            donload_book_txt(book_id, book_info['book_name'], txt_folder)
-            download_book_jacket(book_info['book_jacket'], img_folder)
+            book = parse_book_page(book_response)
+            donload_book_txt(book_id, book['book_name'], txt_folder)
+            download_book_jacket(book['book_jacket'], img_folder)
         except (requests.ConnectionError) as e:
             print('Ошибка подключения: {} '.format(e))
+            sleep(600)
         except (requests.HTTPError) as e:
             print('Книга с id = {}, не найдена '.format(book_id))
             continue
