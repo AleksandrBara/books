@@ -7,13 +7,15 @@ from urllib.parse import urljoin, urlsplit
 import argparse
 from time import sleep
 
-
 BASE_URL = 'https://tululu.org'
 
 
-def donload_book_txt(book_id, file_name, folder):
+def donload_book_txt(book_txt_url, book_id, file_name, folder):
     os.makedirs(folder, exist_ok=True)
-    response = requests.get(BASE_URL, params={'id': book_id})
+    response = requests.get(
+        urljoin(BASE_URL, book_txt_url),
+        params={'id': book_id}
+    )
     response.raise_for_status()
     check_for_redirect(response)
     sanitized_filename = sanitize_filename('{}_{}'.format(
@@ -77,12 +79,13 @@ if __name__ == '__main__':
     img_folder = 'images'
     for book_id in range(book_start_id, book_end_id + 1):
         book_url = '{}/b{}/'.format(BASE_URL, book_id)
+        book_txt_url = urljoin(BASE_URL, 'txt.php')
         try:
             book_response = requests.get(book_url)
             book_response.raise_for_status()
             check_for_redirect(book_response)
             book = parse_book_page(book_response)
-            donload_book_txt(book_id, book['book_name'], txt_folder)
+            donload_book_txt(book_txt_url, book_id, book['book_name'], txt_folder)
             download_book_jacket(book['book_jacket'], img_folder)
         except (requests.ConnectionError) as e:
             print('Ошибка подключения: {} '.format(e))
