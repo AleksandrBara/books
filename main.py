@@ -23,9 +23,10 @@ def donload_book_txt(book_txt_url, book_id, file_name, folder):
         book_id
     ))
     file_extension = '.txt'
-    book_path = Path(folder, '{}{}'.format(sanitized_filename, file_extension))
+    book_path = os.path.join(folder, '{}{}'.format(sanitized_filename, file_extension))
     with open(book_path, 'w') as file:
         file.write(response.text)
+    return book_path
 
 
 def check_for_redirect(response):
@@ -35,20 +36,29 @@ def check_for_redirect(response):
 
 def parse_book_page(response):
     soup = BeautifulSoup(response.text, 'lxml')
-    book_name_tag = soup.find('body').find('h1')
-    book_name, book_author = book_name_tag.text.split('::')
-    book_jaket_tag = soup.find(class_='bookimage').find('img')['src']
-    book_jaket_url = urljoin(response.url, book_jaket_tag)
-    comments_tag = soup.find('div', id='content').find_all('span', class_='black')
-    comments = [comment.text for comment in comments_tag]
-    book_genre_tag = soup.find('span', class_='d_book').find('a')['title']
-    book_genre = book_genre_tag.split('-')[0]
+
+    page_title = soup.title.text
+    book_name, string_with_author = page_title.split(' - ')
+    book_author = string_with_author.split(',')[0]
+
+    book_jaket_select = 'body table .bookimage img'
+    book_jaket_img = soup.select_one(book_jaket_select)['src']
+    book_jaket_url = urljoin(response.url, book_jaket_img)
+
+    comments_select = 'body div.texts span.black'
+    comments = soup.select(comments_select)
+    comments_text = [comment.text for comment in comments]
+
+    book_genres_select = 'span.d_book a'
+    genre_tags = soup.select(book_genres_select)
+    book_genres = [tag.text for tag in genre_tags]
+
     return {
         'book_name': book_name,
         'author': book_author,
         'book_jacket': book_jaket_url,
-        'comments': comments,
-        'genre': book_genre
+        'comments': comments_text,
+        'genre': book_genres
     }
 
 
@@ -59,9 +69,10 @@ def download_book_jacket(url, folder):
     check_for_redirect(response)
     file_name = os.path.basename(urlsplit(url).path)
     sanitized_filename = sanitize_filename(file_name)
-    book_jacket_path = Path(folder, sanitized_filename)
+    book_jacket_path = os.path.join(folder, sanitized_filename)
     with open(book_jacket_path, 'wb') as file:
         file.write(response.content)
+    return book_jacket_path
 
 
 def get_args():
