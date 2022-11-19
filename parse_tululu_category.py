@@ -4,14 +4,14 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlsplit, urlparse
 import argparse
 from time import sleep
-from main import (check_for_redirect, donload_book_txt,
-                  download_book_jacket, parse_book_page
-                  )
-from pprint import pprint
+from books_parser import (check_for_redirect, donload_book_txt,
+                          download_book_jacket, parse_book_page
+                          )
 import json
 from requests import HTTPError, ConnectionError
 
 BASE_URL = 'https://tululu.org'
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 
 def parse_books_urls(response):
@@ -25,19 +25,31 @@ def parse_books_urls(response):
     return one_page_books_urls
 
 
-def get_args():
+def get_args(base_dir, json_file_name='books.json'):
     parser = argparse.ArgumentParser()
     parser.add_argument('--start_page', type=int, default=1)
     parser.add_argument('--end_page', type=int, default=1)
     parser.add_argument('--books_category', type=int, default=55)
+    parser.add_argument('--skip_img', action='store_true')
+    parser.add_argument('--skip_txt', action='store_true')
+    parser.add_argument('--dest_folder', type=str, default=base_dir)
+    parser.add_argument('--json_path', type=str, default=os.path.join(
+        base_dir,
+        json_file_name
+    ))
     return parser.parse_args()
 
 
 if __name__ == '__main__':
-    args = get_args()
-    books_category = args.book_category
+    args = get_args(BASE_DIR)
+    books_category = args.books_category
     last_page = args.end_page
     first_page = args.start_page
+    skip_txt = args.skip_txt
+    skip_img = args.skip_img
+    dest_folder = args.dest_folder
+    json_file_path = args.json_path
+
     books_urls = list()
     for page_number in range(first_page, last_page + 1):
         new_page_url = urljoin(BASE_URL, '/l{}/{}'.format(
@@ -64,13 +76,15 @@ if __name__ == '__main__':
             book_response.raise_for_status()
             check_for_redirect(book_response)
             book = parse_book_page(book_response)
-            book_path = donload_book_txt(
-                book_txt_url,
-                book_id,
-                book['book_name'],
-                txt_folder
-            )
-            book_jacket_path = download_book_jacket(book['book_jacket'], img_folder)
+            if not skip_txt:
+                book_path = donload_book_txt(
+                    book_txt_url,
+                    book_id,
+                    book['book_name'],
+                    txt_folder
+                )
+            if not skip_img:
+                book_jacket_path = download_book_jacket(book['book_jacket'], img_folder)
         except (requests.ConnectionError) as e:
             print('Ошибка подключения: {} '.format(e))
             sleep(600)
@@ -85,11 +99,6 @@ if __name__ == '__main__':
             'comments': book['comments'],
             'genre': book['genre']}
         books_description.append(book_description)
-    json_file_extension, json_file_name = ".json", "books_deskription"
-    json_file_path = os.path.join('{}{}'.format(
-        json_file_name,
-        json_file_extension
-    ))
     with open(json_file_path, 'w', encoding='utf-8') as file:
         json.dump(
             books_description,
