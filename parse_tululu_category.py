@@ -1,8 +1,6 @@
 import requests
 import os
-from pathlib import Path
 from bs4 import BeautifulSoup
-from pathvalidate import sanitize_filename
 from urllib.parse import urljoin, urlsplit, urlparse
 import argparse
 from time import sleep
@@ -27,14 +25,25 @@ def parse_books_urls(response):
     return one_page_books_urls
 
 
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--start_page', type=int, default=1)
+    parser.add_argument('--end_page', type=int, default=1)
+    parser.add_argument('--books_category', type=int, default=55)
+    return parser.parse_args()
+
+
 if __name__ == '__main__':
-    books_category = 'l55'
-    category_url = urljoin(BASE_URL,books_category)
-    last_page = 1
-    first_page = 1
+    args = get_args()
+    books_category = args.book_category
+    last_page = args.end_page
+    first_page = args.start_page
     books_urls = list()
     for page_number in range(first_page, last_page + 1):
-        new_page_url = urljoin(category_url, str(page_number))
+        new_page_url = urljoin(BASE_URL, '/l{}/{}'.format(
+            books_category,
+            page_number
+        ))
         try:
             response = requests.get(new_page_url)
             response.raise_for_status()
