@@ -89,7 +89,7 @@ if __name__ == '__main__':
             print('Ошибка подключения: {} '.format(e))
             sleep(600)
         except (requests.HTTPError) as e:
-            print('Книга с id = {}, не найдена '.format(book_id))
+            print('Книга с id = {}, не доступна для скачивания'.format(book_id))
             continue
         book_description = {
             'title': book['book_name'],
