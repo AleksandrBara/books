@@ -59,11 +59,19 @@ if __name__ == '__main__':
         try:
             response = requests.get(new_page_url)
             response.raise_for_status()
+            check_for_redirect(response)
             on_page_books_urls = parse_books_urls(response)
             books_urls.extend(on_page_books_urls)
-        except (ConnectionError, HTTPError) as e:
+        except ConnectionError as e:
             print('Ошибка подключения: {} '.format(e))
             sleep(600)
+        except HTTPError as e:
+            print('Страницы {} в ктегории {} не существует'.format(
+                page_number,
+                books_category
+            ))
+            print('Ошибка: {} '.format(e))
+            break
 
     txt_folder = 'books'
     img_folder = 'images'
@@ -85,10 +93,10 @@ if __name__ == '__main__':
                 )
             if not skip_img:
                 book_jacket_path = download_book_jacket(book['book_jacket'], img_folder)
-        except (requests.ConnectionError) as e:
+        except ConnectionError as e:
             print('Ошибка подключения: {} '.format(e))
             sleep(600)
-        except (requests.HTTPError) as e:
+        except HTTPError as e:
             print('Книга с id = {}, не доступна для скачивания'.format(book_id))
             continue
         book_description = {
@@ -97,7 +105,7 @@ if __name__ == '__main__':
             'img_src': book_jacket_path,
             'book_path': book_path,
             'comments': book['comments'],
-            'genre': book['genre']}
+            'genres': book['genres']}
         books_description.append(book_description)
     with open(json_file_path, 'w', encoding='utf-8') as file:
         json.dump(
