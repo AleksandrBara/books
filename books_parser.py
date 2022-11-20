@@ -37,14 +37,13 @@ def check_for_redirect(response):
 def parse_book_page(response):
     soup = BeautifulSoup(response.text, 'lxml')
 
-    page_title = soup.head.title.text.split(',')
+    page_title, *_ = soup.head.title.text.split(',')
     try:
-        book_name, string_with_author = page_title[0].split(' - ')
-        book_author = string_with_author.split(',')[0]
+        book_name, book_author = page_title.split(' - ')
     except ValueError:
         page_title = soup.head.title.text.split(' - ')
-        book_name = page_title[0]
-        book_author = page_title[1].split(',')[0]
+        book_name, string_with_author, *_ = page_title
+        book_author, *_ = string_with_author.split(',')
 
     book_jaket_select = 'body table .bookimage img'
     book_jaket_img = soup.select_one(book_jaket_select)['src']
@@ -63,7 +62,7 @@ def parse_book_page(response):
         'author': book_author,
         'book_jacket': book_jaket_url,
         'comments': comments_text,
-        'genre': book_genres
+        'genres': book_genres
     }
 
 
