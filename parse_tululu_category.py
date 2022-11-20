@@ -26,17 +26,31 @@ def parse_books_urls(response):
 
 
 def get_args(base_dir, json_file_name='books.json'):
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--start_page', type=int, default=1)
-    parser.add_argument('--end_page', type=int, default=1)
-    parser.add_argument('--books_category', type=int, default=55)
-    parser.add_argument('--skip_img', action='store_true')
-    parser.add_argument('--skip_txt', action='store_true')
-    parser.add_argument('--dest_folder', type=str, default=base_dir)
-    parser.add_argument('--json_path', type=str, default=os.path.join(
-        base_dir,
-        json_file_name
-    ))
+    parser = argparse.ArgumentParser(
+        description='Скрипт для скачивания электронных книг'
+    )
+    parser.add_argument('--start_page', type=int, default=1,
+                        help='Номер стартовой страницы в категории'
+                        )
+    parser.add_argument('--end_page', type=int, default=1,
+                        help='Номер последней страницы в категории'
+                        )
+    parser.add_argument('--books_category', type=int, default=55,
+                        help='Категория подборки книг'
+                        )
+    parser.add_argument('--skip_img', action='store_true',
+                        help='Параметр позволяет не скачивать обложки(True)'
+                        )
+    parser.add_argument('--skip_txt', action='store_true',
+                        help='Параметр позволяет не скачивать txt файл(True)'
+                        )
+    parser.add_argument('--dest_folder', type=str, default=base_dir,
+                        help='Задать папку для скачивания'
+                        )
+    parser.add_argument('--json_path', type=str,
+                        default=os.path.join(base_dir, json_file_name),
+                        help='Путь к файлу .json'
+                        )
     return parser.parse_args()
 
 
