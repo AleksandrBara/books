@@ -25,4 +25,4 @@ if __name__ == '__main__':
 
     server.watch('template.html',on_reload())
 
-    server.serve(root='index.html')
+    server.serve(root='.')
