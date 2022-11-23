@@ -15,13 +15,14 @@ def on_reload():
     html_pages_path = os.path.join(BASE_DIR, 'html_pages')
     os.makedirs(html_pages_path, exist_ok=True)
     number_of_books_per_page = 20
-    # hulf_of_books = len(books) // 2
+    rows_per_page = 10
     chuncked_books = list(chunked(books, number_of_books_per_page))
     for num, books in enumerate(chuncked_books):
         template = env.get_template('template.html')
         page_path = os.path.join(
             html_pages_path,
             'index{}.html'.format(num))
+        chuncked_books = list(chunked(books, rows_per_page))
         rendered_page = template.render(chuncked_books=chuncked_books)
         with open(page_path, 'w', encoding="utf8") as file:
             file.write(rendered_page)
