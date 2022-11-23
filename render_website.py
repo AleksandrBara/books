@@ -6,6 +6,7 @@ from collections import defaultdict
 from pprint import pprint
 from more_itertools import chunked
 import os
+from math import ceil
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -16,6 +17,7 @@ def on_reload():
     os.makedirs(html_pages_path, exist_ok=True)
     number_of_books_per_page = 20
     rows_per_page = 10
+    number_of_pages = ceil(len(books) / number_of_books_per_page)
     chuncked_books = list(chunked(books, number_of_books_per_page))
     for num, books in enumerate(chuncked_books):
         template = env.get_template('template.html')
@@ -23,7 +25,13 @@ def on_reload():
             html_pages_path,
             'index{}.html'.format(num))
         chuncked_books = list(chunked(books, rows_per_page))
-        rendered_page = template.render(chuncked_books=chuncked_books)
+        previous_page_num = num - 1
+        next_page_num = num + 1
+        rendered_page = template.render(
+            chuncked_books=chuncked_books,
+            number_of_pages=number_of_pages,
+            current_page_number=num
+        )
         with open(page_path, 'w', encoding="utf8") as file:
             file.write(rendered_page)
         print("page reloaded!")
