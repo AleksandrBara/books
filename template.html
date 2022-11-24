@@ -12,12 +12,28 @@
   </head>
   <body>
     <nav aria-label="Page navigation example">
-      <ul class="pagination">
-        <li class="page-item"><a class="page-link" href="index{{page_num}}.html">{{previous_page_num}}>Previous</a></li>
+      <ul class="pagination pagination-lg">
+        {% if current_page_number == 0 %}
+          <li class="page-item disabled">
+        {% else %}
+          <li class="page-item">
+        {% endif %}
+            <a class="page-link" href="index{{current_page_number - 1}}.html"> &lsaquo; Назад</a>
+          </li>
         {% for page_num in range(number_of_pages) %}
-          <li class="page-item"><a class="page-link" href="index{{page_num}}.html">{{page_num}}</a></li>
+          {% if current_page_number == page_num %}
+            <li class="page-item active"><a class="page-link" href="index{{page_num}}.html">{{page_num}}</a></li>
+          {% else %}
+            <li class="page-item"><a class="page-link" href="index{{page_num}}.html">{{page_num}}</a></li>
+        {% endif %}
         {% endfor %}
-        <li class="page-item"><a class="page-link" href="index{{page_num}}.html">{{next_page_num}}>Next</a></li>
+        {% if current_page_number == last_page %}
+          <li class="page-item disabled">
+        {% else %}
+          <li class="page-item">
+        {% endif %}
+        <a class="page-link" href="index{{current_page_number + 1}}.html">Вперед &rsaquo;</a>
+          </li>
       </ul>
     </nav>
 
