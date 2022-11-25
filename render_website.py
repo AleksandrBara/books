@@ -1,14 +1,12 @@
 import json
-from livereload import Server, shell
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+from livereload import Server
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-from collections import defaultdict
-from pprint import pprint
 from more_itertools import chunked
 import os
 from math import ceil
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
 
 def on_reload():
     with open("books.json") as file:
@@ -45,6 +43,6 @@ if __name__ == '__main__':
 
     server = Server()
 
-    server.watch('template.html',on_reload())
+    server.watch('template.html', on_reload())
 
     server.serve(root='.')
