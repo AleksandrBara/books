@@ -40,9 +40,10 @@ if __name__ == '__main__':
         loader=FileSystemLoader('.'),
         autoescape=select_autoescape(['html', 'xml'])
     )
+    on_reload()
 
     server = Server()
 
-    server.watch('template.html', on_reload())
+    server.watch('template.html', on_reload)
 
     server.serve(root='.')
